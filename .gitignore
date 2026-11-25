@@ -1,0 +1,41 @@
+# ===== Secrets Important don't push in repo =====
+.env
+*.env
+appsettings.Development.json
+appsettings.*.local.json
+secrets.json
+
+# ===== .NET / Visual Studio =====
+bin/
+obj/
+.vs/
+*.user
+*.suo
+publish/
+*.pubxml.user
+
+# ===== Angular / Node =====
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+
+# ===== Python / Jupyter =====
+__pycache__/
+*.pyc
+.venv/
+venv/
+thp-parcel-hub/
+.ipynb_checkpoints/
+
+# ===== Generated data & model =====
+data-generator/output/
+*.csv
+*.pkl
+
+# ===== Editors / OS =====
+.vscode/*
+!.vscode/extensions.json
+Thumbs.db
+.DS_Store
+*.log
