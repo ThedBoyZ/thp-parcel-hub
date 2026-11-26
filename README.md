@@ -83,17 +83,20 @@ ER Diagram: [docs/er-diagram.md](docs/er-diagram.md)
 
 ## ผลการวัด
 
-วัดบนข้อมูลจำลอง **[XX] รายการ** ในเครื่องของผู้พัฒนา
+วัดบนข้อมูลจำลอง **พัสดุ 100,000 รายการ / เหตุการณ์ ~500,000 รายการ** ในเครื่องของผู้พัฒนา
 
 ### ผลของ Index ต่อความเร็ว Query
 
-| Query | ก่อนทำ Index | หลังทำ Index | เร็วขึ้น |
-|---|---|---|---|
-| `sp_GetParcelByTrackingNo` | [XX] logical reads / [XX] ms | [XX] logical reads / [XX] ms | [XX] เท่า |
-| `sp_GetMonthlySummary` | [XX] / [XX] ms | [XX] / [XX] ms | [XX] เท่า |
-| `sp_GetBranchDelays` | [XX] / [XX] ms | [XX] / [XX] ms | [XX] เท่า |
+| Query | ก่อนทำ Index (logical reads / ms) | หลังทำ Index (logical reads / ms) | อ่านข้อมูลน้อยลง | เร็วขึ้น |
+|---|---|---|---|---|
+| `sp_GetParcelEvents` | 4,117 / 242 ms | 36 / 0.4 ms | 114 เท่า | 601 เท่า |
+| `sp_GetParcelByTrackingNo` | 1,183 / 38 ms | 18 / 0.6 ms | 66 เท่า | 59 เท่า |
+| `sp_GetMonthlySummary` (1 เดือน) | 1,210 / 66 ms | 87 / 29 ms | 14 เท่า | 2.3 เท่า |
+| `sp_GetBranchDelays` (1 เดือน) | 1,291 / 31 ms | 159 / 8.8 ms | 8 เท่า | 3.5 เท่า |
 
-วิธีวัด: `SET STATISTICS IO, TIME ON` เฉลี่ย [XX] ครั้ง สคริปต์อยู่ใน `database/perf/`
+วิธีวัด: เรียกแต่ละ SP 20 ครั้งหลัง warm-up แล้วหาค่าเฉลี่ยต่อครั้ง · logical reads คงที่ทุกครั้งที่รัน ส่วนเวลาแกว่งตามเครื่อง
+สคริปต์: [database/perf/measure.sql](database/perf/measure.sql)
+สรุปรายเดือนเร็วขึ้นน้อยกว่า เพราะยังต้องนับพัสดุทั้งเดือน (~12,000 ชิ้น) Index ช่วยให้อ่านเฉพาะเดือนนั้นแทนการอ่านทั้งปี
 
 ### โมเดลทำนายความเสี่ยงล่าช้า
 
