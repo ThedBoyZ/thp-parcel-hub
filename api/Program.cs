@@ -80,6 +80,7 @@ var app = builder.Build();
 // ---- Pipeline (Authentication ต้องมาก่อน Authorization) --------------------
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseHttpsRedirection();        // ก่อน Swagger เพื่อให้ทุกหน้าเด้งไป https
 
 // Production เปิด Swagger ได้ด้วย "Swagger:Enabled": true (ใช้กับเครื่อง Demo)
 if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Swagger:Enabled"))
@@ -88,7 +89,6 @@ if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Swagger
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
