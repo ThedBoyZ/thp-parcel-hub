@@ -1,0 +1,26 @@
+### ทดสอบ API ใน Visual Studio / VS Code: กด "Send Request" เหนือแต่ละคำขอ
+@host = http://localhost:5209/api/v1
+
+### 1) Login สำเร็จ → ได้ token
+# @name login
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "username": "staff01", "password": "Demo@2026" }
+
+### 2) รหัสผิด → 401 (ข้อความเดียวกับ "ไม่มีผู้ใช้นี้")
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "username": "staff01", "password": "wrong" }
+
+### 3) ดูข้อมูลตัวเองจาก token → 200
+GET {{host}}/auth/me
+Authorization: Bearer {{login.response.body.$.token}}
+
+### 4) ไม่ส่ง token → 401
+GET {{host}}/auth/me
+
+### 5) staff01 เรียก endpoint ของผู้ดูแลข้อมูล → 403
+GET {{host}}/auth/check/steward
+Authorization: Bearer {{login.response.body.$.token}}

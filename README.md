@@ -55,14 +55,14 @@ ER Diagram: [docs/er-diagram.md](docs/er-diagram.md)
 
 | ความสามารถ | สถานะ |
 |---|---|
-| เข้าสู่ระบบด้วย JWT (บทบาท: เจ้าหน้าที่ / ผู้ดูแลข้อมูล / ผู้ดูแลระบบ) | ⬜ |
+| เข้าสู่ระบบด้วย JWT (บทบาท: เจ้าหน้าที่ / ผู้ดูแลข้อมูล / ผู้ดูแลระบบ) | ✅ |
 | ค้นหาพัสดุได้ครั้งละสูงสุด 10 หมายเลข (คั่นด้วย Comma) โดยไม่ต้องเข้าสู่ระบบ | ⬜ |
 | ไทม์ไลน์สถานะพัสดุ (รับฝาก → คัดแยก → ขนส่ง → ถึงที่ทำการ → นำจ่าย) | ⬜ |
 | Dashboard จำนวนพัสดุรายเดือนและอัตราส่งตรงเวลา | ⬜ |
 | อันดับสาขาที่ส่งล่าช้า | ⬜ |
 | คาดการณ์ความเสี่ยงล่าช้า (Low / Medium / High) | ⬜ |
 | ปุ่ม "คำนวณความเสี่ยงใหม่" (สั่งรัน `predict.py`) | ⬜ |
-| เอกสาร API ด้วย Swagger | ⬜ |
+| เอกสาร API ด้วย Swagger | ✅ |
 | บันทึก API log ลง MongoDB | ⬜ เสริม |
 | Deploy บน IIS | ⬜ |
 
@@ -131,6 +131,7 @@ ER Diagram: [docs/er-diagram.md](docs/er-diagram.md)
 ```text
 database/01_schema.sql
 database/03_stored_procedures.sql
+database/04_users.sql
 ```
 
 ### 2. สร้างข้อมูลจำลอง
@@ -154,12 +155,13 @@ python generate_data.py
 
 ```bash
 cd api
-# คัดลอกไฟล์ตั้งค่าตัวอย่าง แล้วใส่ Connection String และ JWT Key ของตัวเอง
+# คัดลอกไฟล์ตั้งค่าตัวอย่าง แล้วใส่ Connection String และ JWT Key (ข้อความสุ่มยาว 32 ตัวอักษรขึ้นไป)
 copy appsettings.Example.json appsettings.Development.json
-dotnet run
+dotnet run --launch-profile http
 ```
 
-Swagger: `https://localhost:[port]/swagger`
+Swagger: `http://localhost:5209/swagger` · ทดสอบเร็ว ๆ ได้จาก `api/ParcelHub.Api.http`
+หรือเปิด `api/ParcelHub.slnx` ใน Visual Studio แล้วกด F5
 
 ### 4. หน้าเว็บ
 
@@ -175,9 +177,9 @@ ng serve
 
 | บทบาท | Username | Password |
 |---|---|---|
-| เจ้าหน้าที่ | [XX] | [XX] |
-| ผู้ดูแลข้อมูล | [XX] | [XX] |
-| ผู้ดูแลระบบ | [XX] | [XX] |
+| เจ้าหน้าที่ | `staff01` | `Demo@2026` |
+| ผู้ดูแลข้อมูล | `steward01` | `Demo@2026` |
+| ผู้ดูแลระบบ | `admin01` | `Demo@2026` |
 
 ---
 
@@ -188,6 +190,7 @@ Base URL: `/api/v1`
 | Method | Path | คำอธิบาย | สิทธิ์ |
 |---|---|---|---|
 | POST | `/auth/login` | รับ JWT | ทุกคน |
+| GET | `/auth/me` | ข้อมูลผู้ใช้จาก Token | ผู้ที่เข้าสู่ระบบ |
 | GET | `/parcels/{no}` | ข้อมูลและสถานะพัสดุ (ไม่มีชื่อ/เบอร์โทร) | ทุกคน |
 | GET | `/parcels/{no}/events` | ไทม์ไลน์เหตุการณ์ | ทุกคน |
 | GET | `/stats/summary?month=` | สถิติสรุปรายเดือน | ผู้ดูแลข้อมูล |
