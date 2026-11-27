@@ -64,7 +64,7 @@ ER Diagram: [docs/er-diagram.md](docs/er-diagram.md)
 | ปุ่ม "คำนวณความเสี่ยงใหม่" (สั่งรัน `predict.py`) | ⬜ |
 | เอกสาร API ด้วย Swagger | ✅ |
 | บันทึก API log ลง MongoDB | ⬜ เสริม |
-| Deploy บน IIS | ⬜ |
+| Deploy บน IIS | ✅ |
 
 ---
 
@@ -173,6 +173,26 @@ ng serve
 
 เปิด `http://localhost:4200`
 
+### 5. Deploy (Demo บน IIS)
+
+Demo: **https://thp-parcelhub-demo.duckdns.org/swagger** (เปิดเฉพาะช่วงนำเสนอ)
+
+| ส่วน | ที่ใช้ |
+|---|---|
+| Server | AWS EC2 · Windows Server 2025 |
+| Web server | IIS + ASP.NET Core Hosting Bundle (.NET 10) |
+| Database | SQL Server 2025 Express (restore จากไฟล์ `.bak`) |
+| Domain / HTTPS | DuckDNS + Let's Encrypt (win-acme ต่ออายุอัตโนมัติ) |
+
+```bash
+dotnet publish api/ParcelHub.Api.csproj -c Release -o publish/api
+```
+
+1. Copy `publish/api` ไปไว้ที่ `C:\inetpub\parcelhub` บนเซิร์ฟเวอร์
+2. สร้าง `appsettings.Production.json` บนเซิร์ฟเวอร์จาก `appsettings.Production.Example.json` ด้วย JWT Key ชุดใหม่ (ไม่ขึ้น Git)
+3. IIS App Pool ตั้งเป็น **No Managed Code**
+4. สิทธิ์ฐานข้อมูลของ App Pool: `GRANT EXECUTE` อย่างเดียว เรียกได้แค่ Stored Procedure ไม่มีสิทธิ์อ่าน/เขียนตารางตรง
+
 ### บัญชีทดลอง (จำลอง)
 
 | บทบาท | Username | Password |
@@ -229,7 +249,8 @@ parcel-data-service-hub/
   ในระบบจริงจะตั้งเวลาฝึกโมเดลใหม่เป็นรอบ ผ่านผู้ดูแลที่มีสิทธิ์
 - **รองรับการย้ายไป Oracle:** ใช้รหัสสถานะแบบข้อความธรรมดา และหลีกเลี่ยงชนิดข้อมูลเฉพาะของ SQL Server
   ส่วน Stored Procedure ต้องเขียนใหม่เป็น PL/SQL
-- **ข้อมูลส่วนบุคคล (PDPA):** ชื่อและเบอร์โทรเป็นข้อมูลจำลองทั้งหมด และ API ส่งเบอร์โทรแบบปิดบังบางส่วน
+- **ข้อมูลส่วนบุคคล (PDPA):** ชื่อและเบอร์โทรเป็นข้อมูลจำลองทั้งหมด และ API ค้นหาพัสดุที่เปิดให้ทุกคนใช้ ไม่ส่งชื่อหรือเบอร์โทรออกไปเลย (Stored Procedure ไม่ JOIN ตาราง Customer)
+- **Deploy บน Cloud แทนเครื่องตัวเอง:** ตรวจพบว่าอินเทอร์เน็ตบ้านอยู่หลัง CGNAT (ไม่มี Public IP จึงทำ Port forward ไม่ได้) จึงใช้ EC2 + DuckDNS และเปิดเครื่องเฉพาะช่วงที่ใช้งานเพื่อคุมค่าใช้จ่าย
 
 ---
 
