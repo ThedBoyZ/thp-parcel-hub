@@ -2,6 +2,7 @@
 .env
 *.env
 appsettings.Development.json
+appsettings.Production.json
 appsettings.*.local.json
 secrets.json
 
