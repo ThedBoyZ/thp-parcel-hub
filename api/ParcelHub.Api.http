@@ -1,6 +1,8 @@
 ### ทดสอบ API ใน Visual Studio / VS Code: กด "Send Request" เหนือแต่ละคำขอ
 @host = http://localhost:5209/api/v1
 
+# ======================= Auth =======================
+
 ### 1) Login สำเร็จ → ได้ token
 # @name login
 POST {{host}}/auth/login
@@ -21,6 +23,58 @@ Authorization: Bearer {{login.response.body.$.token}}
 ### 4) ไม่ส่ง token → 401
 GET {{host}}/auth/me
 
-### 5) staff01 เรียก endpoint ของผู้ดูแลข้อมูล → 403
-GET {{host}}/auth/check/steward
+### 5) Login เป็นผู้ดูแลข้อมูล (ใช้กับ /stats)
+# @name steward
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "username": "steward01", "password": "Demo@2026" }
+
+# ======================= Parcels (ไม่ต้อง Login) =======================
+
+### 6) ค้นหลายเลข: 6 เลขตัวอย่าง (ครบ 5 สถานะ) + 1 เลขที่ไม่มีในระบบ → found 6, notFound 1
+GET {{host}}/parcels?numbers=EX987654321TH,EX555000111TH,EX123456789TH,EX246813579TH,EX112233445TH,EX998877665TH,EX000000000TH
+
+### 7) พิมพ์ตัวเล็ก/มีช่องว่าง → ยังค้นเจอ
+GET {{host}}/parcels/ex123456789th
+
+### 8) ไทม์ไลน์
+GET {{host}}/parcels/EX123456789TH/events
+
+### 9) รูปแบบผิด → 400
+GET {{host}}/parcels/12345
+
+### 10) รูปแบบถูกแต่ไม่มีในระบบ → 404
+GET {{host}}/parcels/EX000000000TH
+
+# ======================= Stats (ผู้ดูแลข้อมูลขึ้นไป) =======================
+
+### 11) สรุปรายเดือน → 200
+GET {{host}}/stats/summary?from=2026-01-01&to=2026-11-30
+Authorization: Bearer {{steward.response.body.$.token}}
+
+### 12) จำนวนตามสถานะ → 200
+GET {{host}}/stats/status?from=2026-11-01&to=2026-11-30
+Authorization: Bearer {{steward.response.body.$.token}}
+
+### 13) Top 5 สาขาที่ส่งล่าช้า → 200
+GET {{host}}/branches/delays?from=2026-01-01&to=2026-11-30&top=5
+Authorization: Bearer {{steward.response.body.$.token}}
+
+### 14) staff01 เรียก stats → 403 (สิทธิ์ไม่พอ)
+GET {{host}}/stats/summary?from=2026-01-01&to=2026-11-30
 Authorization: Bearer {{login.response.body.$.token}}
+
+### 15) from > to → 400
+GET {{host}}/stats/summary?from=2026-12-01&to=2026-01-01
+Authorization: Bearer {{steward.response.body.$.token}}
+
+### 16) ไม่ส่ง from/to → 400
+GET {{host}}/stats/summary
+Authorization: Bearer {{steward.response.body.$.token}}
+
+### 17) Rate limit: กด Login ผิดเกิน 5 ครั้งใน 1 นาที → 429 + Header Retry-After
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "username": "nobody", "password": "x" }
