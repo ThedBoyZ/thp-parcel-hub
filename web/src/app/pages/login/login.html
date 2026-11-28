@@ -1,0 +1,48 @@
+<div class="container page">
+  <div class="login">
+    <aside class="panel">
+      <p class="eyebrow">Parcel Data Service Hub</p>
+      <h1>เข้าสู่ระบบสำหรับเจ้าหน้าที่</h1>
+      <p>สิทธิ์เป็นลำดับขั้น — บัญชีระดับสูงกว่าทำได้ทุกอย่างที่บัญชีระดับต่ำกว่าทำได้</p>
+      <ul class="roles">
+        @for (a of accounts; track a.username) {
+          <li><strong>{{ a.label }}</strong><span>{{ a.access }}</span></li>
+        }
+      </ul>
+      <p class="note">ไม่ต้องเข้าสู่ระบบ: ติดตามพัสดุ · Data Catalog · คู่มือนักพัฒนา</p>
+    </aside>
+
+    <form class="card form" (ngSubmit)="submit()">
+      <h2>เข้าสู่ระบบ</h2>
+
+      @if (error(); as message) {
+        <p class="alert alert-error" role="alert">{{ message }}</p>
+      }
+
+      <div class="field">
+        <label for="username">ชื่อผู้ใช้</label>
+        <input id="username" name="username" class="input" [(ngModel)]="username" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="password">รหัสผ่าน</label>
+        <input id="password" name="password" type="password" class="input" [(ngModel)]="password"
+               autocomplete="current-password" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary full" [disabled]="loading()">
+        {{ loading() ? 'กำลังเข้าสู่ระบบ…' : 'เข้าสู่ระบบ' }}
+      </button>
+
+      <div class="demo">
+        <p class="muted">บัญชีทดลอง (รหัสผ่าน <code>Demo&#64;2026</code>) — กดเพื่อกรอกให้อัตโนมัติ</p>
+        <div class="demo-list">
+          @for (a of accounts; track a.username) {
+            <button type="button" class="btn btn-outline btn-sm" (click)="fill(a.username)">
+              <span class="mono">{{ a.username }}</span> · {{ a.label }}
+            </button>
+          }
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

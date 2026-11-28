@@ -1,0 +1,24 @@
+.login { display: grid; grid-template-columns: 1fr 1fr; border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); max-width: 960px; margin: 16px auto 0; }
+
+.panel { background: var(--red); color: #fff; padding: 40px; display: flex; flex-direction: column; gap: 12px; }
+.panel .eyebrow { margin: 0; font-weight: 500; opacity: .85; }
+.panel h1 { font-size: 28px; margin: 0; }
+.panel p { margin: 0; }
+.roles { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 10px; }
+.roles li { background: rgba(255, 255, 255, .12); border-radius: 8px; padding: 10px 14px; display: flex; flex-direction: column; }
+.roles span { font-size: 14px; opacity: .9; }
+.note { font-size: 14px; opacity: .9; margin-top: auto !important; }
+
+.form { border: 0; border-radius: 0; box-shadow: none; padding: 40px; display: flex; flex-direction: column; gap: 16px; }
+.form h2 { margin: 0; }
+.full { width: 100%; }
+
+.demo { border-top: 1px solid var(--border); padding-top: 16px; }
+.demo p { font-size: 14px; margin: 0 0 10px; }
+.demo-list { display: flex; flex-direction: column; gap: 8px; }
+.demo-list .btn { justify-content: flex-start; }
+
+@media (max-width: 760px) {
+  .login { grid-template-columns: 1fr; }
+  .panel, .form { padding: 24px; }
+}

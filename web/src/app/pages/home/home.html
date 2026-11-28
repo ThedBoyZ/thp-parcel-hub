@@ -1,0 +1,150 @@
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="hero-text">
+      <p class="eyebrow">ระบบบริการข้อมูลพัสดุ · ข้อมูลจำลอง</p>
+      <h1>ติดตามพัสดุ และบริการข้อมูล<br>สำหรับหน่วยงานในองค์กร</h1>
+      <p>ค้นหาสถานะพัสดุได้ทันทีโดยไม่ต้องเข้าสู่ระบบ — ข้อมูลส่วนบุคคลของผู้ส่งและผู้รับไม่ถูกเปิดเผย</p>
+    </div>
+
+    <form class="search card" (ngSubmit)="search()" role="search">
+      <label for="tracking" class="search-label">หมายเลขพัสดุ</label>
+      <div class="search-row">
+        <input id="tracking" name="tracking" class="input mono" [(ngModel)]="query"
+               placeholder="เช่น EX123456789TH (สูงสุด 10 หมายเลข คั่นด้วย ,)" autocomplete="off">
+        <button type="submit" class="btn btn-primary" [disabled]="loading()">
+          {{ loading() ? 'กำลังค้นหา…' : 'ค้นหา' }}
+        </button>
+      </div>
+      <div class="demo">
+        <span class="muted">ลองเลขตัวอย่าง:</span>
+        @for (d of demoNumbers; track d.no) {
+          <button type="button" class="chip" (click)="useDemo(d.no)" [title]="d.hint">{{ d.hint }}</button>
+        }
+        <button type="button" class="chip chip-all" (click)="useAllDemos()">ทั้งหมด 6 เลข</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<div class="container">
+  @if (error(); as message) {
+    <p class="alert alert-error result-gap" role="alert">{{ message }}</p>
+  }
+
+  @if (searched()) {
+    <section class="results" aria-live="polite">
+      <h2>ผลการค้นหา <span class="muted count">พบ {{ found().length }} · ไม่พบ {{ notFound().length }}</span></h2>
+
+      @if (notFound().length > 0) {
+        <p class="alert alert-info">ไม่พบหมายเลข: <span class="mono">{{ notFound().join(', ') }}</span></p>
+      }
+
+      @for (p of found(); track p.trackingNo) {
+        <article class="parcel card">
+          <header class="parcel-head">
+            <div>
+              <span class="mono tracking">{{ p.trackingNo }}</span>
+              <span class="service">{{ p.serviceType }} · {{ p.weightGram | number }} กรัม</span>
+            </div>
+            <span class="badge" [class]="deliveryBadge(p).css">{{ deliveryBadge(p).text }}</span>
+          </header>
+
+          <ol class="stepper" [attr.aria-label]="'สถานะ: ' + statusLabel(p.currentStatus)">
+            @for (s of steps; track s.code; let i = $index) {
+              <li [class.done]="i <= statusIndex(p.currentStatus)"
+                  [class.current]="i === statusIndex(p.currentStatus)">
+                <span class="step-dot" aria-hidden="true"></span>
+                <span class="step-label">{{ s.label }}</span>
+              </li>
+            }
+          </ol>
+
+          <dl class="facts">
+            <div><dt>ต้นทาง</dt><dd>{{ p.originBranch }} <span class="muted">({{ p.originProvince }})</span></dd></div>
+            <div><dt>ปลายทาง</dt><dd>{{ p.destBranch }} <span class="muted">({{ p.destProvince }})</span></dd></div>
+            <div><dt>รับฝาก</dt><dd>{{ p.acceptedAt | date: 'd MMM y HH:mm' }}</dd></div>
+            <div><dt>กำหนดถึง</dt><dd>{{ p.expectedDeliveryAt | date: 'd MMM y HH:mm' }}</dd></div>
+            @if (p.deliveredAt) {
+              <div><dt>นำจ่ายเมื่อ</dt><dd>{{ p.deliveredAt | date: 'd MMM y HH:mm' }}</dd></div>
+            }
+          </dl>
+
+          <button type="button" class="btn btn-outline btn-sm" (click)="toggleTimeline(p.trackingNo)"
+                  [attr.aria-expanded]="!!timelines()[p.trackingNo]">
+            {{ timelines()[p.trackingNo] ? 'ซ่อนไทม์ไลน์' : 'ดูไทม์ไลน์' }}
+          </button>
+
+          @if (timelines()[p.trackingNo]; as t) {
+            @if (t.loading) {
+              <p class="muted">กำลังโหลด…</p>
+            } @else if (t.error) {
+              <p class="alert alert-error">{{ t.error }}</p>
+            } @else {
+              <ul class="timeline">
+                @for (e of t.events.slice().reverse(); track e.eventAt; let first = $first) {
+                  <li [class.latest]="first">
+                    <time>{{ e.eventAt | date: 'd MMM y HH:mm' }}</time>
+                    <strong>{{ statusLabel(e.status) }}</strong>
+                    <span class="muted">{{ e.branchName }} · {{ e.province }}</span>
+                    @if (e.note) { <span class="note">{{ e.note }}</span> }
+                  </li>
+                }
+              </ul>
+            }
+          }
+        </article>
+      }
+    </section>
+  }
+
+  <section class="kpis" aria-label="ตัวเลขของระบบ">
+    <div class="kpi"><strong>100,000</strong><span>พัสดุจำลอง</span></div>
+    <div class="kpi"><strong>~497,000</strong><span>เหตุการณ์ติดตาม</span></div>
+    <div class="kpi"><strong>59×</strong><span>ค้นเลขพัสดุเร็วขึ้นด้วย Index (38 → 0.6 ms)</span></div>
+    <div class="kpi"><strong>3</strong><span>ระดับสิทธิ์ (JWT + Role)</span></div>
+  </section>
+
+  <section class="services">
+    <h2>บริการข้อมูล</h2>
+    <div class="service-grid">
+      <a routerLink="/" class="service card">
+        <h3>ติดตามพัสดุ</h3>
+        <p>สถานะและไทม์ไลน์ 5 ขั้น ไม่ต้องเข้าสู่ระบบ</p>
+        <span class="who">ทุกคน</span>
+      </a>
+      <a routerLink="/delay-risk" class="service card">
+        <h3>คาดการณ์ล่าช้า</h3>
+        <p>ระดับความเสี่ยง Low / Medium / High จากโมเดล ML</p>
+        <span class="who">เจ้าหน้าที่ขึ้นไป</span>
+      </a>
+      <a routerLink="/dashboard" class="service card">
+        <h3>Dashboard</h3>
+        <p>สถิติรายเดือน อัตราตรงเวลา และสาขาที่ส่งล่าช้า</p>
+        <span class="who">ผู้ดูแลข้อมูลขึ้นไป</span>
+      </a>
+      <a routerLink="/data-catalog" class="service card">
+        <h3>Data Catalog</h3>
+        <p>รายการชุดข้อมูล โครงสร้าง และการกำกับดูแลข้อมูล</p>
+        <span class="who">ทุกคน</span>
+      </a>
+    </div>
+  </section>
+</div>
+
+<section class="api-band">
+  <div class="container api-inner">
+    <div>
+      <h2>REST API สำหรับระบบอื่นในองค์กร</h2>
+      <p>ดึงข้อมูลเดียวกับหน้าเว็บผ่าน <code>/api/v1</code> พร้อมเอกสาร Swagger</p>
+      <div class="api-actions">
+        <a routerLink="/developers" class="btn btn-primary">คู่มือนักพัฒนา</a>
+        <a href="/swagger" class="btn btn-ghost">เปิด Swagger</a>
+      </div>
+    </div>
+    <pre class="code"><span class="c-method">GET</span> /api/v1/parcels/EX123456789TH
+
+<span class="c-key">"currentStatus"</span>: <span class="c-str">"IN_TRANSIT"</span>,
+<span class="c-key">"originProvince"</span>: <span class="c-str">"กาญจนบุรี"</span>,
+<span class="c-key">"expectedDeliveryAt"</span>: <span class="c-str">"2026-12-02T20:00:00"</span></pre>
+  </div>
+</section>
