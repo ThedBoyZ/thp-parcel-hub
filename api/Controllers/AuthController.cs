@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ParcelHub.Api.Auth;
 using ParcelHub.Api.Data;
+using ParcelHub.Api.Infrastructure;
 using ParcelHub.Api.Models;
 
 namespace ParcelHub.Api.Controllers;
@@ -17,8 +19,10 @@ public sealed class AuthController(
     // POST /api/v1/auth/login
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimits.Login)]
     [ProducesResponseType<LoginResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
     {
         var user = await users.GetForLoginAsync(request.Username);
@@ -47,12 +51,4 @@ public sealed class AuthController(
         User.FindFirst("unique_name")!.Value,
         User.FindFirst("role")!.Value,
         User.Identity!.Name ?? ""));
-
-    // GET /api/v1/auth/check/steward — ตรวจสิทธิ์ผู้ดูแลข้อมูลขึ้นไป (staff → 403)
-    [HttpGet("check/steward")]
-    [Authorize(Policy = Policies.StewardUp)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public IActionResult CheckSteward() => Ok(new { message = "ผ่าน: สิทธิ์ผู้ดูแลข้อมูลขึ้นไป" });
 }

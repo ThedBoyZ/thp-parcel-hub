@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using ParcelHub.Api.Auth;
 using ParcelHub.Api.Data;
+using ParcelHub.Api.Infrastructure;
 using ParcelHub.Api.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,8 +16,19 @@ builder.Services.AddProblemDetails();       // Error ทุกตัวตอบ
 
 builder.Services.AddSingleton<SqlConnectionFactory>();
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<ParcelRepository>();
+builder.Services.AddScoped<StatsRepository>();
 builder.Services.AddSingleton<TokenService>();
 builder.Services.AddSingleton<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
+
+builder.Services.AddApiRateLimits();
+
+// ---- CORS: อนุญาตเฉพาะ Origin ของหน้าเว็บที่กำหนดใน appsettings (Cors:Origins) ----
+var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? [];
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
+    .WithOrigins(corsOrigins)
+    .AllowAnyHeader()
+    .AllowAnyMethod()));
 
 // ---- Authentication: JWT Bearer ----------------------------------------
 var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
@@ -89,8 +101,10 @@ if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Swagger
     app.UseSwaggerUI();
 }
 
+app.UseCors();                    // ก่อน Authentication: Preflight (OPTIONS) ไม่มี Token
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllers();
 
 app.Run();
